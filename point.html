@@ -79,6 +79,8 @@
             margin: 10px;
             border: 3px solid #000;
             max-width: 250px;
+
+
         }
 
         #legend h3 {
@@ -230,6 +232,10 @@
             padding: 10px;
             font-size: 10px;
         }
+
+        #legend img {
+            width: 150px;
+        }
     </style>
 </head>
 
@@ -239,7 +245,9 @@
     </div>
     <div id="map"></div>
     <div id="legend" style="display:none">
-        <h3>Title</h3>
+        <div style="display: flex; flex-direction: column;    align-items: center;">
+            <img src="RDA Logo Black.png">
+        </div>
         <div id="legend-body" class="legend-body"></div>
     </div>
 
@@ -266,13 +274,14 @@
                 zoom: 10
             });
 
-            const logo = document.createElement('img');
-            logo.src = 'RDA Logo Black.png'
-            logo.style.width = '150px';
-            map.controls[google.maps.ControlPosition.LEFT_TOP].push(logo);
+            // const logo = document.createElement('img');
+            // logo.src = 'RDA Logo Black.png'
+            // logo.style.width = '150px';
+            // map.controls[google.maps.ControlPosition.LEFT_TOP].push(logo);
 
 
             var legend = document.getElementById('legend');
+
             map.controls[google.maps.ControlPosition.TOP_RIGHT].push(legend);
 
             var searchPannel = document.getElementById('searchPannel');
