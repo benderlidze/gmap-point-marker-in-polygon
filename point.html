@@ -52,25 +52,6 @@
             width: 300px;
         }
 
-        #pac-input:focus {
-            border-color: #4d90fe;
-        }
-
-        .pac-container {
-            font-family: Roboto;
-        }
-
-        #type-selector {
-            color: #fff;
-            background-color: #4d90fe;
-            padding: 5px 11px 0px 11px;
-        }
-
-        #type-selector label {
-            font-family: Roboto;
-            font-size: 13px;
-            font-weight: 300;
-        }
 
         #legend {
             font-family: Arial, sans-serif;
@@ -78,9 +59,7 @@
             padding: 10px;
             margin: 10px;
             border: 3px solid #000;
-            max-width: 250px;
-
-
+            width: 250px;
         }
 
         #legend h3 {
@@ -119,115 +98,6 @@
 
 
 
-        /* The Modal (background) */
-        .modal {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            /* Stay in place */
-            z-index: 1;
-            /* Sit on top */
-            padding-top: 100px;
-            /* Location of the box */
-            left: 0;
-            top: 0;
-            width: 100%;
-            /* Full width */
-            height: 100%;
-            /* Full height */
-            overflow: auto;
-            /* Enable scroll if needed */
-            background-color: rgb(0, 0, 0);
-            /* Fallback color */
-            background-color: rgba(0, 0, 0, 0.4);
-            /* Black w/ opacity */
-        }
-
-        /* Modal Content */
-        .modal-content {
-            position: relative;
-            background-color: #fefefe;
-            margin: auto;
-            padding: 0;
-            border: 1px solid #888;
-            width: 80%;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-            -webkit-animation-name: animatetop;
-            -webkit-animation-duration: 0.4s;
-            animation-name: animatetop;
-            animation-duration: 0.4s
-        }
-
-        /* Add Animation */
-        @-webkit-keyframes animatetop {
-            from {
-                top: -300px;
-                opacity: 0
-            }
-
-            to {
-                top: 0;
-                opacity: 1
-            }
-        }
-
-        @keyframes animatetop {
-            from {
-                top: -300px;
-                opacity: 0
-            }
-
-            to {
-                top: 0;
-                opacity: 1
-            }
-        }
-
-        /* The Close Button */
-        .close {
-            color: white;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .modal-header {
-            padding: 2px 16px;
-            background-color: #404040;
-            color: white;
-        }
-
-        .modal-body {
-            padding: 2px 16px;
-        }
-
-        .modal-footer {
-            padding: 2px 16px;
-            background-color: #404040;
-            color: white;
-        }
-
-        #closeModal {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 10px 15px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            margin: 5px;
-        }
-
         .info {
             padding: 10px;
             font-size: 10px;
@@ -235,6 +105,34 @@
 
         #legend img {
             width: 150px;
+        }
+
+        #legend-toggle {
+            display: none;
+            width: 100%;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        @media only screen and (max-width: 600px) {
+            #legend {
+                top: 40px !important;
+            }
+
+            #legend-toggle {
+                display: block;
+            }
+
+            #legend-content {
+                display: none;
+            }
+
+            #legend-content.open {
+                display: block;
+            }
         }
     </style>
 </head>
@@ -245,10 +143,13 @@
     </div>
     <div id="map"></div>
     <div id="legend" style="display:none">
-        <div style="display: flex; flex-direction: column;    align-items: center;">
-            <img src="RDA Logo Black.png">
+        <button id="legend-toggle">Open/Close Legend</button>
+        <div id="legend-content">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <img src="RDA Logo Black.png">
+            </div>
+            <div id="legend-body" class="legend-body"></div>
         </div>
-        <div id="legend-body" class="legend-body"></div>
     </div>
 
     <script>
@@ -271,7 +172,12 @@
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: -8.580521011587523, lng: 116.32043160190389 },
-                zoom: 10
+                zoom: 10,
+                //disable map type control
+                mapTypeControl: false,
+                //disable street view control
+                streetViewControl: false,
+
             });
 
             // const logo = document.createElement('img');
@@ -346,6 +252,7 @@
             upalodGeojson(data)
             showHidePolygons(data, true)
 
+            setupLegendToggle();
         }
 
         function upalodGeojson(data) {
@@ -353,10 +260,8 @@
             var polygons = [];
             let index = 0;
 
-
             map.data.addGeoJson(data);
             map.data.setStyle(function (feature) {
-                console.log('feature', feature);
                 const poly = {
                     fillColor: feature.getProperty("color"),
                     strokeWeight: 1,
@@ -388,8 +293,18 @@
 
         }
 
-        function showHidePolygons(polygon, display) {
+        function setupLegendToggle() {
+            const legendToggle = document.getElementById('legend-toggle');
+            const legendContent = document.getElementById('legend-content');
 
+            legendToggle.addEventListener('click', function () {
+                legendContent.classList.toggle('open');
+                legendToggle.textContent = legendContent.classList.contains('open') ? 'Close Legend' : 'Open Legend';
+            });
+        }
+
+
+        function showHidePolygons(polygon, display) {
             legend.innerHTML = ""; // clear legend
             var legendText = '';
             polygon.features.map(function (item, key) {
@@ -401,16 +316,12 @@
             })
             legend.innerHTML = legendText;
             polygon.visible = true;
-
-
-
             legend.innerHTML += '<div class="info">*PLEASE NOTE THESE PRICES ARE FOR CUSTOMERS WHO HAVE BOOKED A TOUR WITH US. ZONE 1 IS OUR STANDARD PICK-UP AND DROP-OFF AREA, AND IS FREE OF CHARGE. OTHER AREAS HAVE A SURCHARGE, WHICH IS LISTED ABOVE. ALL PRICES ARE IN IDR PLEASE CONTACT US FOR MORE INFORMATION</div>'
-
         }
 
     </script>
     <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBeVERtl6-MScPy5xT3ysrJsM4zRkcjGaY&libraries=places&callback=initMap"
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBeVERtl6-MScPy5xT3ysrJsM4zRkcjGaY&libraries=places&callback=initMap&loading=async"
         async defer></script>
 
 </body>
